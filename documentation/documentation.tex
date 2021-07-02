@@ -1,0 +1,151 @@
+\documentclass[a4paper]{article} %article
+
+%Introduction des packages
+\usepackage[english]{babel}  
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{adjustbox}
+\usepackage{graphicx, fink, grffile} %Insertion d'images
+\usepackage{amsmath} %Gestion/édition des formules mathématiques
+\usepackage{mathrsfs}
+\usepackage{mathtools}
+\usepackage[load-configurations = abbreviations]{siunitx}
+\usepackage{textcomp}
+\usepackage{tabularx}
+\usepackage{url}
+\usepackage[hidelinks]{hyperref}
+\usepackage{booktabs}
+\usepackage{xfrac}
+\usepackage{relsize}
+\usepackage{bm}
+\usepackage{cancel}
+\usepackage{xcolor}
+\usepackage[a4paper, top = 1.8cm, bottom = 2.3cm, right = 2cm, left=2cm]{geometry}
+\usepackage[justification=centering]{caption, subcaption}
+\usepackage{titling}
+\usepackage[stable]{footmisc}
+\usepackage{stmaryrd}
+\usepackage{animate}
+\usepackage{fancybox}
+%\usepackage{underscore}
+\usepackage{physics}
+\usepackage{cases}
+\usepackage{amsfonts}%pour écrire l'espace des reels R proprement
+\usepackage{float}%Pour placer correctement les images
+\usepackage{enumitem}%pour customiser les listes à puces
+
+\usepackage{appendix}
+
+\usepackage{listings}
+%\usepackage[framed,numbered,autolinebreaks,useliterate]{mcode}
+\usepackage{empheq}%permet d'encadrer des équations
+%\usepackage[framed]{matlab-prettifier}
+
+\usepackage{multirow}
+\usepackage{booktabs}
+
+
+%%%%%%% BIBTEX
+\usepackage[nottoc, notlof, notlot]{tocbibind}
+\usepackage{cite}
+%\addbibresource{biblio.bib}
+
+\let\vec\mathbf
+
+\makeatother
+
+\title{\vspace{-1cm}\hrulefill \\ \vspace*{0.25cm} \Huge\textbf{MC simulation of the solar KK axions density}
+\\ - Documentation -\\ \hrulefill }%\vspace*{1cm}}
+\date{\textit{- Spring 2020 -}}
+\author{Cyprien BEAUFORT - \textcolor{blue}{\textit{beaufort@lpsc.in2p3.fr}}}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+
+\section{Installation and running}
+	\subsection{Dependencies}
+	
+	\begin{itemize}
+		\item[\textbullet] C++ ($\geq$ C++11)
+		\item[\textbullet] CMake ($\geq$ 3.3)
+		\item[\textbullet] GSL (GNU Scientific Library : \textcolor{blue}{https://www.gnu.org/software/gsl/})
+		\item[\textbullet] ROOT ($\geq$ 6) (\textcolor{blue}{https://root.cern.ch/}) 
+	\end{itemize}
+	
+\subsection{Files description}
+
+They are 3 main files in the directory:
+\begin{itemize}
+	\item[\textbullet] \texttt{AxionDensityMC.cxx}: this is the main program that will run the code. It uses multithreading (one thread for each mass considered), it then runs the MC simulations in each threads. When all threads have been joined, it reads their outputs and generates a final histogram with the density.
+	\item[\textbullet] \texttt{MCfunctions.h}: contains the class \texttt{AxionMC} that is used for the simulation. It also contains the function \texttt{ThreadRunner} used to properly run the threads.
+	\item[\textbullet] \texttt{MCfunctions.cpp}: the corresponding implementations of all methods in the class \texttt{AxionMC}.\\
+\end{itemize}
+	
+	The simulation will generate output files located in the directory \texttt{output}. It creates one file per thread (\textit{i.e.} per mass) containing a list of trapped axions located in a 1cm$^3$ box, with a corresponding weight for each of them. The file \texttt{density.txt} is the concatenation of all other files, so it is the main result. The directory also contains a ROOT file with the final histogram of the KK axion density.\\
+	
+	
+\subsection{Set the parameters}
+
+Numerical parameters used in the simulations can all be set inside the code, calling the appropriate \texttt{Set} function. For instance, for setting the number of energy points to $10^6$ one must call \texttt{axionMC->SetNenergy(1e6);} in the initialization part of \texttt{AxionDensityMC.cxx}. Default values (used to obtain the published results) are set in the constructor of the class \texttt{AxionMC}.\\
+
+One must be careful when changing the parameters in order to still obtain physical results. We here describe quickly the parameters:
+\begin{itemize}
+	\item \texttt{nIterMC} is the number of iterations per mass and per energy. Increasing this number improves the statistics.
+	\item \texttt{nEnergy} is the number of energy points. It must be large enough to cover the range of trapped KK axions having an orbit that passes in the 1cm$^3$ box used in the code. It should be larger than $10^5$ for precise simulations.
+	\item \texttt{tMinPower} will set the minimum time to evaluate the position of the axion. It must be large compared to the period of the orbit.
+	\item \texttt{tMaxPower} is a limit on this duration in order to accelerate the code (do not solve the EoM for too long duration). Increasing \texttt{tMaxPower} improves a bit the precision but it slows down the code.
+	\item \texttt{boxWidthFactor} is a scaling factor for the size of the box in which we count the axions. The box must be large enough to contain statistically enough axions, but not too large in order not to bias the result. We typically use $2\times 10 ^{11}$. One can play with this parameter: if it is set correctly, varying a bit \texttt{boxWidthFactor} should not modify the density obtained.
+	\item  \texttt{minVelocity} and \texttt{maxVelocity} set the range of the axion velocity. We know that for an axion to be trapped, its velocity should be lower than the escape velocity, but if it is too low the axion will not reach the Earth. We then set a range on the axion velocity to focus on a region of interest.
+\end{itemize}
+
+\subsection{Running the code}
+
+First, one needs to compile the code with the command \texttt{make clean ; make}. If you encounters compiling issues please have a look to the \texttt{Makefile} to see if ROOT and GSL are correctly linked. Compiling will generate an executable file, \texttt{AxionDensityMC.bin}.\\
+
+To run the simulation, execute the binary with the parameters $\delta$, $R\,\mathrm{[keV^{-1}]}$, and $g_{10}$ [no unit] as arguments. For instance:\\
+\texttt{./AxionDensityMC.bin 2 1e3 9.2e-4}\\
+
+This MC simulation is very long: with the default values and 25 mass points (so 25 threads), the computing time is about 5 days.
+
+\section{Working principles}
+
+The number density of KK axions at a distance $r$ from the Sun can be obtained from a Monte Carlo (MC) simulation. The axion density is a crucial quantity for phenomenology and we aim to cross-check the analytic calculations with the MC simulation, both approaches using a different philosophy.\\
+
+The backbone of the simulation is to produce a given amount of KK axions in the Sun and to follow the trajectory of each of them by solving the Equations of Motion (EoM). In this way one knows the position of each KK axion at any time and one can compute the number density at a distance $r$.  The number of KK axions of mass $m$ produced by the Sun evolves in time as:
+\begin{equation}
+	\frac{dN_a(t,m)}{dt} = -\Gamma(m)\,N_a(t,m) + P_a(m)
+\end{equation}
+where $P_a(m)$ is the solar production rate. It implies that, at present time $t=t_\odot$,
+\begin{equation}
+	N_a(m, t_\odot) = \frac{P_a(m)}{\Gamma(m)}\,\bigg(1-e^{-t_\odot\Gamma(m)}\bigg)
+\end{equation}
+
+Summing over the mode multiplicity yields to
+\begin{equation}
+	N_a\big(\delta, R, g_{10}, t_\odot\big) = \frac{2\pi^{\delta/2}}{\Gamma[\delta/2]}\,R^{\delta}\int_0^\infty dm \, m^{(\delta-1)}\,  \frac{P_a(m)}{\Gamma(m)}\,\bigg(1-e^{-t_\odot\Gamma(m)}\bigg)
+\end{equation}
+
+We already have seen that the coalescence mechanism is the main source of trapped axions. The solar axion production, per energy and time unit, through the coalescence process is given by
+\begin{equation}
+	P_a(m, E) = \frac{g_{10}^2}{32\pi^2}\,m^4\,\sqrt{E^2 - m^2}\,\int_{Sun}\,dr\, \frac{r^2}{e^{E/T(r)} -1}
+	\label{eq:prodMC}
+\end{equation}
+in which the integration is over a solar model. In this work we use the Saclay solar model \cite{SaclayModel}. The present total number of KK axions susceptible of being trapped is then given by
+\begin{equation}
+\begin{split}
+	N_a\big(\delta, R, g_{10}, t_\odot\big) = \frac{2\pi^{\delta/2}}{\Gamma[\delta/2]}\,&R^{\delta}\int_0^\infty dm \,  \frac{m^{(\delta-1)}}{\Gamma(m)}\,\bigg(1-e^{-t_\odot\Gamma(m)}\bigg) \\
+	& \times \int_m^\infty \, dE\, \frac{g_{10}^2}{32\pi^2}\,m^4\,\sqrt{E^2 - m^2}\,\int_{Sun}\,dr\, \frac{r^2}{e^{E/T(r)} -1}
+\end{split}
+\label{eq:NaMC}
+\end{equation}
+
+The principle of the MC simulation is to generate $n_{MC}$ KK axions of mass $m$ and energy $E$, to follow them in their trajectory around the Sun, and to count the proportion that will be located in a $1\,\mathrm{cm^3}$ box at distance $r$ to the Sun. Since the solar axion production is isotropic this box can be located at any position in the $(\phi, \theta)$ plane. We then scale $n_{MC}$ according to Eq. (\ref{eq:NaMC}) to get the present number density of KK axions.\\
+
+In order to know the position of the axion at present time $t_\odot$, the axion being produced at time $t_a \leq t_\odot$, one must solve the EoM from $t_a$ to $t_\odot$. We want to stress out that numerically $t_a$ does not need to be chosen in the range $]0, t_\odot]$ but instead it can be taken randomly in the range $[t_{rand}, t_\odot]$ as long as $t_{rand}$ is large enough compared to the orbit period of the trapped axion around the Sun. The reasons are that we do not consider interactions between axions, that we assume the production rate of the Sun to be constant in time and isotropic, and that the eventual decay of the axion is already embedded in Eq. (\ref{eq:NaMC}).\\
+
+The randomness of the MC comes from the choice of the initial conditions in the EoM solver: $r_0$ is taken randomly in the distribution of Eq. (\ref{eq:prodMC}) ; $\theta_0$ is taken randomly in an uniform distribution $\mathcal{U}(0, \pi)$ ; $\phi_0$ randomly in $\mathcal{U}(0, 2\pi)$ ; and the duration of the integration $t_{rand}$ is taken randomly in a power law distribution.\\
+
+\end{document} 
