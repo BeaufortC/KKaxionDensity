@@ -146,6 +146,6 @@ The principle of the MC simulation is to generate $n_{MC}$ KK axions of mass $m$
 
 In order to know the position of the axion at present time $t_\odot$, the axion being produced at time $t_a \leq t_\odot$, one must solve the EoM from $t_a$ to $t_\odot$. We want to stress out that numerically $t_a$ does not need to be chosen in the range $]0, t_\odot]$ but instead it can be taken randomly in the range $[t_{rand}, t_\odot]$ as long as $t_{rand}$ is large enough compared to the orbit period of the trapped axion around the Sun. The reasons are that we do not consider interactions between axions, that we assume the production rate of the Sun to be constant in time and isotropic, and that the eventual decay of the axion is already embedded in Eq. (\ref{eq:NaMC}).\\
 
-The randomness of the MC comes from the choice of the initial conditions in the EoM solver: $r_0$ is taken randomly in the distribution of Eq. (\ref{eq:prodMC}) ; $\theta_0$ is taken randomly in an uniform distribution $\mathcal{U}(0, \pi)$ ; $\phi_0$ randomly in $\mathcal{U}(0, 2\pi)$ ; and the duration of the integration $t_{rand}$ is taken randomly in a power law distribution.\\
+The randomness of the MC comes from the choice of the initial conditions in the EoM solver: $r_0$ is taken randomly in the distribution of Eq. (\ref{eq:prodMC}) ; $\theta_0$ and $\phi_0$ are constructed in order to have an isotropic angular distribution $d\Omega=d\cos\theta_0 \, d\phi_0$ ; and the duration of the integration $t_{rand}$ is taken randomly in a power law distribution.\\
 
 \end{document} 

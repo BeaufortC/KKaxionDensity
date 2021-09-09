@@ -52,6 +52,7 @@ int AxionMC::MCthread(AxionMC* axMC, int threadID, double mass, double massWidth
 
     ///Random number generator
     TRandom3 *rand = new TRandom3(time(NULL) * threadID);
+    double tmpRnd;//Random number uniformly drawn in (0,1)
 
     ///Output file for this thread
     char filename[64];
@@ -103,8 +104,12 @@ int AxionMC::MCthread(AxionMC* axMC, int threadID, double mass, double massWidth
             r0 = hRate.GetRandom();//radius of production
 
             ///Generate random axions parameters
-            ax.theta0   = rand->Uniform(0., PI);//isotrope production
-            ax.phi0     = rand->Uniform(0., 2*PI);//isotrope production
+                //Theta and Phi are constructed to have a uniform angular distribution
+            tmpRnd      = rand->Uniform(0, 1);
+            ax.theta0   = acos(2*tmpRnd - 1);
+            tmpRnd      = rand->Uniform(0,1);
+            ax.phi0     = 2.*PI*tmpRnd;
+
             ax.x0       = r0 * cos(ax.phi0);
             ax.y0       = r0 * sin(ax.phi0);
             ax.vx0      = v0 * cos(ax.phi0);
